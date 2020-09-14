@@ -25,6 +25,8 @@ func main() {
 		DisableTimestamp: false,
 		TimestampFormat:  time.RFC822Z,
 	})
+	logrus.SetLevel(logrus.WarnLevel)
+	
 	commands.Execute()
 	
 	if false {
