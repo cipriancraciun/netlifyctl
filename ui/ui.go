@@ -76,15 +76,15 @@ func AskForInput(message, defaultValue string) (string, error) {
 }
 
 func DoneCheck() string {
-	return color.GreenString("✔")
+	return color.GreenString("[x]")
 }
 
 func ErrorCheck() string {
-	return color.RedString("✘")
+	return color.RedString("[!]")
 }
 
 func WorldCheck() string {
-	return color.GreenString("🌎")
+	return color.GreenString("[x]")
 }
 
 func Bold(msg string, args ...interface{}) {

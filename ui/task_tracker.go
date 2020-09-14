@@ -12,7 +12,7 @@ const progressColor = "blue"
 
 var (
 	Term              = !color.NoColor
-	progressIndicator = spinner.CharSets[39] // spinning hearth
+	progressIndicator = spinner.CharSets[9]
 )
 
 type TaskTracker struct {
