@@ -55,6 +55,12 @@ func NewRunFunc(f CommandFunc, mm []Middleware) func(*cobra.Command, []string) e
 
 func DebugMiddleware(cmd CommandFunc) CommandFunc {
 	return func(ctx context.Context, c *cobra.Command, args []string) error {
+
+		dump, err := c.Root().Flags().GetBool("debug")
+		if err != nil {
+			return err
+		}
+
 		b := new(bytes.Buffer)
 		// Enable open-api debug mode and disable it after running the command.
 		os.Setenv("DEBUG", "1")
@@ -62,15 +68,14 @@ func DebugMiddleware(cmd CommandFunc) CommandFunc {
 
 		// Enable debug logging
 		logrus.SetOutput(b)
-		logrus.SetLevel(logrus.DebugLevel)
+		if dump {
+			logrus.SetLevel(logrus.DebugLevel)
+		} else {
+			logrus.SetLevel(logrus.WarnLevel)
+		}
 		logrus.WithFields(logrus.Fields{"command": c.Use, "arguments": args}).Debug("PreRun")
 
 		logrus.Debug("configure debug middleware")
-
-		dump, err := c.Root().Flags().GetBool("debug")
-		if err != nil {
-			return err
-		}
 
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -88,10 +93,14 @@ func DebugMiddleware(cmd CommandFunc) CommandFunc {
 		// Run command
 		if err := cmd(ctx, c, args); err != nil {
 			logrus.WithError(err).Error("command failed")
-			if err := dumpDebug(b); err != nil {
-				return err
+			if dump {
+				if err := dumpDebug(b); err != nil {
+					return err
+				}
+				return fmt.Errorf("There was an error running this command.\nDebug log dumped to %s\nThis log includes full recordings of HTTP requests with credentials, be careful if you share it", debugLogFile)
+			} else {
+				return fmt.Errorf("There was an error running this command.")
 			}
-			return fmt.Errorf("There was an error running this command.\nDebug log dumped to %s\nThis log includes full recordings of HTTP requests with credentials, be careful if you share it", debugLogFile)
 		}
 
 		if dump {
